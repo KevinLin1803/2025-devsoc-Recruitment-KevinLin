@@ -45,9 +45,37 @@ app.post("/parse", (req:Request, res:Response) => {
 // [TASK 1] ====================================================================
 // Takes in a recipeName and returns it in a form that 
 const parse_handwriting = (recipeName: string): string | null => {
-  // TODO: implement me
-  return recipeName
+
+  // Remove leading/trailing white spaces
+  var cleaned: string = recipeName.trim()
+
+  // Replacing hyphens and underscores and white spaces
+  // Ensuring only one white space between words
+  cleaned = cleaned.replace( /[-_]|\s+ /g, ' ')
+
+  // Any non-letter or whitespace character removed
+  cleaned = cleaned.replace(/[^a-zA-Z ]/g, '')
+
+  // if the string is less than 0 characters then return null
+  if (cleaned.length == 0) return null
+
+  // Convert to title case
+  cleaned = cleaned.replace(
+    /\w\S*/g,
+    text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+  );
+
+  return cleaned 
 }
+
+// Addition test cases for this huh
+  // - test that multiple want space characters are removed
+  // if perfect then no issues
+  // error case: if it for real yeets the whole string what happens
+
+
+
+// We'll do a little more on the other tasks tonight
 
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
