@@ -30,7 +30,6 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-// const cookbook: Map<string, cookbookEntry> = new Map();
 const ingredients: Map<string, ingredient> = new Map();
 const recipes: Map<string, recipe> = new Map();
 
@@ -55,9 +54,11 @@ const parse_handwriting = (recipeName: string): string | null => {
   // Remove leading/trailing white spaces
   var cleaned: string = recipeName.trim()
 
-  // Replacing hyphens and underscores and white spaces
+  // Replacing hyphens and underscores with white spaces
+  cleaned = cleaned.replace( /[-_]/g, ' ')
+
   // Ensuring only one white space between words
-  cleaned = cleaned.replace( /[-_]|\s+ /g, ' ')
+  cleaned = cleaned.replace( /\s+/g, ' ')
 
   // Any non-letter or whitespace character removed
   cleaned = cleaned.replace(/[^a-zA-Z ]/g, '')
@@ -73,11 +74,6 @@ const parse_handwriting = (recipeName: string): string | null => {
 
   return cleaned 
 }
-
-// Addition test cases for this huh
-  // - test that multiple want space characters are removed
-  // if perfect then no issues
-  // error case: if it for real yeets the whole string what happens
 
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
@@ -99,6 +95,7 @@ app.post("/entry", (req:Request, res:Response) => {
 
     for (const item of (entry as recipe).requiredItems) {
       if (dups.has(item.name)) return res.status(400).send("Invalid required item list: Has duplicates")
+      else if (item.quantity < 1) return res.status(400).send("Quantity must be at least one")
       else dups.add(item.name)
 
       recipes.set(entry.name, entry as recipe)
@@ -108,15 +105,12 @@ app.post("/entry", (req:Request, res:Response) => {
   }
 
   res.status(200).send("Successful :)")
-  res.json()
 });
 
-// Additional test case for task 2:
+// Additional test cases for task 2:
+  // casing? eg: beef vs Beef (is this considered unique?)
+  // quantity > 0
   // - if quantity in required items is less than 1
-  // input might not be a cookbook entry
-
-  // Also check if the res.json is proper/legit/needed
-
 
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
@@ -127,10 +121,8 @@ const extractIngredients = (requiredItems: requiredItem[]): Map<string, number> 
 
   for (const item of requiredItems) {
     if (recipes.has(item.name)) {
-      // Inner ingredients is only created in the first place because I didn't want to loop through the recursive call directly. However, if there's a way to check for null before then
-      // I'd be glad (seems like a waste)
       const innerIngredients : Map<string, number> = extractIngredients(recipes.get(item.name).requiredItems)
-
+      // We'll see if there's a better way to do this
       if (innerIngredients == null) {
         return null
       }
